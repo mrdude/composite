@@ -593,25 +593,32 @@ test_captbl_expand(void)
 	PRINTC("Captbl expand SUCCESS.\n");
 }
 
+void
+test_sqlite(void)
+{
+	printc("hello world!\n");
+}
+
 /* Executed in micro_booter environment */
 void
 test_run_mb(void)
 {
-	test_timer();
+	//test_timer();
 //	test_budgets();
 
-	test_thds();
-	test_thds_perf();
+	//test_thds();
+	//test_thds_perf();
 
 	test_mem();
+	test_sqlite();
 
-	test_async_endpoints();
-	test_async_endpoints_perf();
+	//test_async_endpoints();
+	//test_async_endpoints_perf();
 
-	test_inv();
-	test_inv_perf();
+	//test_inv();
+	//test_inv_perf();
 
-	test_captbl_expand();
+	//test_captbl_expand();
 }
 
 /*
