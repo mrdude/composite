@@ -3,7 +3,7 @@ SQLite + The _Composite_ Component-Based OS
 
 This branch contains my incomplete port of SQLite to Composite.
 
-All of my code is in the micro_booter test (src/components/implementation/tests/micro_booter).
+All of my code is in the micro_booter test ((src/components/implementation/tests/micro_booter)[https://github.com/mrdude/composite/tree/sqlite/src/components/implementation/tests/micro_booter]).
 
 The port
 --------
@@ -14,9 +14,11 @@ necessary to supply a suitable VFS implementation. It is also possible
 to replace SQLite's memory allocation layer and mutexes.
 
 My implementations for the VFS and memory allocation layers are
-in (micro_booter/os_composite.h) and (micro_booter/composite_sqlite.c). I wrote stub
-code for a replacement mutex implementation, but I never wrote the actual implmentation;
-I decided to assume that SQLite would be used in single-threaded mode.
+in ((micro_booter/os_composite.h)[https://github.com/mrdude/composite/blob/sqlite/src/components/implementation/tests/micro_booter/os_composite.h]
+and ((micro_booter/composite_sqlite.c)[https://github.com/mrdude/composite/blob/sqlite/src/components/implementation/tests/micro_booter/composite_sqlite.c].
+I wrote stub code for a replacement mutex implementation, but I never
+wrote the actual implementation; I decided to assume that SQLite would
+be used in single-threaded mode.
 
 In general, my implementations try to avoid depending on the C standard library.
 If you compile without `-DSQLITE_COS_PROFILE_VFS`, `-DSQLITE_COS_PROFILE_MUTEX`, or `-DSQLITE_COS_PROFILE_MEMORY`,
@@ -42,10 +44,13 @@ My VFS Implementation
 ---------------------
 
 A VFS implementation in SQLite is represented by a filled `sqlite3_vfs` struct.
-The VFS implementation used by Composite is defined in composite_sqlite.c:1656.
-The functions used in this VFS implementation are defined starting at line 633.
+The VFS implementation used by Composite is defined in
+(composite_sqlite.c:1656)[https://github.com/mrdude/composite/blob/sqlite/src/components/implementation/tests/micro_booter/composite_sqlite.c#L1656].
 
-My VFS implementation is a transition, in-memory filesystem. It uses the memory
+The functions used in this VFS implementation are defined starting at
+(line 633)[https://github.com/mrdude/composite/blob/sqlite/src/components/implementation/tests/micro_booter/composite_sqlite.c#L633].
+
+My VFS implementation is a transient, in-memory filesystem. It uses the memory
 allocation subsystem to make allocations.
 
 Files in the filesystem are represented by an instance of `struct fs_file`. A
@@ -56,8 +61,10 @@ My Memory Allocation Implementation
 -----------------------------------
 
 A memory allocation implementation is represented by a filled `sqlite3_mem_methods` struct.
-The implmentation used by Composite is defined in composite_sqlite.c:1697.
-The functions used in this implmentation are defined starting at line 8.
+The implmentation used by Composite is defined in
+(composite_sqlite.c:1697)[https://github.com/mrdude/composite/blob/sqlite/src/components/implementation/tests/micro_booter/composite_sqlite.c#L1697].
+The functions used in this implmentation are defined starting at
+(line 8)[https://github.com/mrdude/composite/blob/sqlite/src/components/implementation/tests/micro_booter/composite_sqlite.c#L8].
 
 The memory implementation is basically just a wrapper around malloc() and free().
 Because SQLite needs to be able to query the size of it's memory allocations
