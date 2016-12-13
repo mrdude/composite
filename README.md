@@ -1,46 +1,73 @@
-The _Composite_ Component-Based OS
-==================================
+SQLite + The _Composite_ Component-Based OS
+===========================================
 
-This is the source code for the _Composite_ component-based OS.  Even
-low-level system policies such as scheduling, memory mapping, and
-synchronization are defined as discrete user-level components.  Each
-component exports an interface used to harness its functionality, and
-components are composed together to form an executable system.
+This branch contains my incomplete port of SQLite to Composite.
 
-Please see http://composite.seas.gwu.edu for publications and
-more information.
+All of my code is in the micro_booter test (src/components/implementation/tests/micro_booter).
 
-Research features of _Composite_
---------------------------------
+The port
+--------
 
-See a summary of the research directions of _Composite_ at http://composite.seas.gwu.edu.
+SQLite abstracts its accesses to the filesystem behind a virtual
+filesystem layer. In order to port SQLite to Composite, it is
+necessary to supply a suitable VFS implementation. It is also possible
+to replace SQLite's memory allocation layer and mutexes.
 
-Where to start -- a tour of the source code
--------------------------------------------
+My implementations for the VFS and memory allocation layers are
+in (micro_booter/os_composite.h) and (micro_booter/composite_sqlite.c). I wrote stub
+code for a replacement mutex implementation, but I never wrote the actual implmentation;
+I decided to assume that SQLite would be used in single-threaded mode.
 
-- Please read the doc/ directory for more information on how the code
-  is organized
+In general, my implementations try to avoid depending on the C standard library.
+If you compile without `-DSQLITE_COS_PROFILE_VFS`, `-DSQLITE_COS_PROFILE_MUTEX`, or `-DSQLITE_COS_PROFILE_MEMORY`,
+this port will only use 2 functions from the C standard library (`malloc()`, `free()`).
 
-- Join the compositeos@googlegroups.com mailing list
+The SQLite project prefers to distributes its releases as a single, large, "amalgamation" C file.
+The code for SQLite release 3.15.2 is in (micro_booter/sqlite3.c).
 
-- To run *Composite*, you start by reading the installation and usage
-  summary in `docs/installation_usage_summary.md`.
+The Debugging printf()'s
+------------------------
+Each subsystem implementation (VFS and memory) is instrumented with "printf() profiling" code.
+When printf() profiling is enabled, every single API call to that implementation will print
+it's parameters and return value.
 
-_Composite_ system support
---------------------------
+It was great while I was debugging, but it creates a lot of spam to stdout so it's off by default.
 
-- x86-32
-- booting using Linux 2.6.33 or 2.6.36 (see Hijack support for booting
-  information)
-- networking using Linux drivers and a modified tun/tap driver to
-  communicate with _Composite_
+You can enable profiling in the VFS, memory allocation, and mutex subsystems by compiling
+with `-DSQLITE_COS_PROFILE_VFS=1`, `-DSQLITE_COS_PROFILE_MUTEX=1`, or `-DSQLITE_COS_PROFILE_MEMORY=1`.
 
-Important note
---------------
+Note that compiling with profiling will pull in quite a few `#include <>`'s.
 
-**The code is pre-alpha quality.  Some parts are quite solid, many
-  others are absolutely not.  Please consult with us to determine if
-  it is right for your use-case.**
+My VFS Implementation
+---------------------
+
+A VFS implementation in SQLite is represented by a filled `sqlite3_vfs` struct.
+The VFS implementation used by Composite is defined in composite_sqlite.c:1656.
+The functions used in this VFS implementation are defined starting at line 633.
+
+My VFS implementation is a transition, in-memory filesystem. It uses the memory
+allocation subsystem to make allocations.
+
+Files in the filesystem are represented by an instance of `struct fs_file`. A
+`fs_file` contains a pointer to the `char[]` holding its file data. This buffer
+starts out as 4k in size, but is expanded in calls to `fs_write()` as needed. 
+
+My Memory Allocation Implementation
+-----------------------------------
+
+A memory allocation implementation is represented by a filled `sqlite3_mem_methods` struct.
+The implmentation used by Composite is defined in composite_sqlite.c:1697.
+The functions used in this implmentation are defined starting at line 8.
+
+The memory implementation is basically just a wrapper around malloc() and free().
+Because SQLite needs to be able to query the size of it's memory allocations
+(and the C malloc() API annoyingly doesn't give this information), my implementation
+adds extra 4 bytes to each allocation, which it uses to store the size of the allocation.
+
+My memory allocation implementation contains the only `#include <>` in the entire port;
+simply replacing the memory implementation with a pointer bump allocator (kind of like
+the one included in Composite) would mean that this port doesn't rely on the C standard
+library at all.
 
 Licensing
 ---------
